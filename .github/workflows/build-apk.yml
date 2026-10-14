@@ -25,34 +25,38 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      # Step 4: Install Flutter (Matches Flet 0.25.2 layout dependencies perfectly)
+      # Step 4: Install Flutter Version 3.24.0 (Satisfies Flet's explicit requirement)
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.2'
+          flutter-version: '3.24.0'
           channel: 'stable'
 
-      # Step 5: Install Python 3.10 for the host runner environment
+      # Step 5: Automatically accept the Android SDK licenses hidden in the toolchain
+      - name: Accept Android Licenses
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses
+
+      # Step 6: Install Python 3.10 for the host runner environment
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      # Step 6: Install locked framework dependencies
+      # Step 7: Install matching framework dependencies
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install flet==0.25.2 pandas
 
-      # Step 7: Compile the APK package using the pre-cached server environment path
+      # Step 8: Compile the APK package using the newly aligned versions
       - name: Build Android APK Package
         run: |
           flet build apk --verbose
           
-      # Step 8: Upload the finished installer package back to your computer browser
+      # Step 9: Upload the finished installer package back to your computer browser
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: zoids-encounter-apk
           path: build/apk/*.apk
-

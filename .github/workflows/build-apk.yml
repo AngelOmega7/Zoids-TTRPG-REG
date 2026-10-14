@@ -25,11 +25,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      # Step 4: Provision official Flutter runtime elements
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
+      # Step 4: Provision official Flutter runtime elements (no longer needed)
 
       # Step 5: Provision Python execution layer
       - name: Set up Python
@@ -46,7 +42,7 @@ jobs:
       # Step 7: Run compilation using verbose log tracking flags
       - name: Build Android APK Package
         run: |
-          flet build apk --verbose
+          flet build apk --verbose --no-interactive
 
       # Step 8: Deliver finalized app module bundle back to your computer browser
       - name: Upload APK Artifact

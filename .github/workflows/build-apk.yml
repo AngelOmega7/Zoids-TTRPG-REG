@@ -1,105 +1,45 @@
-name: Build APK
+name: Build Flet Android APK
 
 on:
-  workflow_dispatch:
-
-permissions:
-  contents: read
+  workflow_dispatch: # Allows you to manually click "Run workflow" on your computer
 
 jobs:
   build:
-    name: Build ${{ matrix.target }}
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: 90
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - target: apk
-            runner: ubuntu-latest
-
-          - target: aab
-            runner: ubuntu-latest
-
-          - target: ipa
-            runner: macos-latest
-
-          - target: ios-simulator
-            runner: macos-latest
-
-          - target: linux
-            runner: ubuntu-latest
-
-          - target: macos
-            runner: macos-latest
-
-          - target: web
-            runner: ubuntu-latest
-
-          - target: windows
-            runner: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-        with:
-          persist-credentials: false
+      # Step 1: Download your code (main.py, generator.py, ZoidsDB.csv) into the runner
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - name: Create sample Flet app
-        shell: bash
+      # Step 2: Set up Java (required by the Android SDK to compile code)
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # Step 3: Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Step 4: Install your dependencies (Flet and Pandas)
+      - name: Install Dependencies
         run: |
-          set -euo pipefail
-          mkdir -p sample/src
-          cat > sample/pyproject.toml <<'EOF'
-          [project]
-          name = "flet-build-action-smoke-test"
-          version = "0.1.0"
-          requires-python = ">=3.10"
-          dependencies = ["flet"]
+          python -m pip install --upgrade pip
+          pip install flet pandas
 
-          [tool.flet]
-          org = "dev.flet"
-          product = "Smoke Test"
-          company = "Flet"
-
-          [tool.flet.app]
-          path = "src"
-          EOF
-          cat > sample/src/main.py <<'EOF'
-          import flet as ft
-
-
-          def main(page: ft.Page):
-              page.add(ft.Text("Flet build action smoke test"))
-
-
-          ft.run(main)
-          EOF
-
-      - name: Build app
-        id: build
-        uses: ./
+      # Step 5: The official Flet action compiles everything into an APK
+      - name: Build Android APK
+        uses: flet-dev/flet-build-action@v1
         with:
-          target: ${{ matrix.target }}
-          working-directory: sample
-          runner-python-version: "3.14"
-          bundled-python-version: "3.14"
-          build-number: ${{ github.run_number }}
+          platform: android
 
-      - name: Verify action outputs
-        shell: bash
-        env:
-          OUTPUT_PATH: ${{ steps.build.outputs.output-path }}
-          ARCHIVE_PATH: ${{ steps.build.outputs.archive-path }}
-        run: |
-          set -euo pipefail
-          test -d "$OUTPUT_PATH"
-          test -f "$ARCHIVE_PATH"
-
-      - name: Upload archive
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      # Step 6: Upload the finished APK file so you can download it from your browser
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
         with:
-          path: ${{ steps.build.outputs.archive-path }}
-          archive: false
-          if-no-files-found: error
-          overwrite: false
+          name: zoids-encounter-apk
+          path: build/apk/*.apk

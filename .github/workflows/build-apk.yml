@@ -42,7 +42,7 @@ jobs:
       # Step 7: Run compilation using verbose log tracking flags
       - name: Build Android APK Package
         run: |
-          flet build apk --clean --verbose --yes
+          flet build apk --cleanup-packages --verbose --yes
 
       # Step 8: Deliver finalized app module bundle back to your computer browser
       - name: Upload APK Artifact

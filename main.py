@@ -88,4 +88,7 @@ def main(page: ft.Page):
     )
 
 if __name__ == "__main__":
-    ft.main(main)
+    try:
+        ft.main(main)
+    except AttributeError:
+        ft.app(target=main)

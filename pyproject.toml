@@ -1,0 +1,12 @@
+[project]
+name = "zoids_ttrpg_reg"
+version = "0.1.0"
+description = "Zoids TTRPG Random Encounter Generator"
+dependencies = [
+    "flet>=0.21.0",
+    "pandas>=2.0.0",
+]
+
+[tool.flet]
+# This points the compiler directly to your main execution script
+main-module = "main"

@@ -1,43 +1,54 @@
 name: Build Flet Android APK
 
 on:
-  workflow_dispatch: # Allows you to manually click "Run workflow" on your computer
+  workflow_dispatch: # Allows manual computer clicks
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Download your code (main.py, generator.py, ZoidsDB.csv) into the runner
+      # Step 1: Pull your files (main.py, generator.py, ZoidsDB.csv, pyproject.toml)
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Step 2: Set up Java (required by the Android SDK to compile code)
+      # Step 2: Pre-configure internal Gradle memory flags to prevent background exit crashes
+      - name: Configure Gradle Memory Bounds
+        run: |
+          mkdir -p ~/.gradle
+          echo "org.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m" >> ~/.gradle/gradle.properties
+
+      # Step 3: Load official Java requirements 
       - name: Set up JDK 17
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # Step 3: Set up Python
+      # Step 4: Provision official Flutter runtime elements
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      # Step 5: Provision Python execution layer
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      # Step 4: Install your dependencies (Flet and Pandas)
+      # Step 6: Install core project engine libraries
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flet pandas --system
+          pip install flet pandas
 
-      # Step 5: The official Flet action compiles everything into an APK
-      - name: Build Android APK
-        uses: flet-dev/flet-build-action@v1
-        with:
-          target: apk
+      # Step 7: Run compilation using verbose log tracking flags
+      - name: Build Android APK Package
+        run: |
+          flet build apk --verbose
 
-      # Step 6: Upload the finished APK file so you can download it from your browser
+      # Step 8: Deliver finalized app module bundle back to your computer browser
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:

@@ -40,7 +40,7 @@ jobs:
       # Step 6: Compile the APK forcing the internal bundle to use an embedded Python 3.10 runtime
       - name: Build Android APK Package
         run: |
-          flet build apk --python-version 3.10 --verbose
+          flet build apk --verbose
 
       # Step 7: Upload the finished installer package back to your computer browser
       - name: Upload APK Artifact

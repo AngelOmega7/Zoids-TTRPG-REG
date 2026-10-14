@@ -25,24 +25,31 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      # Step 4: Install Python 3.10 for the host runner environment
+      # Step 4: Install Flutter (Matches Flet 0.25.2 layout dependencies perfectly)
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.2'
+          channel: 'stable'
+
+      # Step 5: Install Python 3.10 for the host runner environment
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      # Step 5: Install a stable desktop compiler CLI version
+      # Step 6: Install locked framework dependencies
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install flet==0.25.2 pandas
 
-      # Step 6: Compile the APK forcing the internal bundle to use an embedded Python 3.10 runtime
+      # Step 7: Compile the APK package using the pre-cached server environment path
       - name: Build Android APK Package
         run: |
           flet build apk --verbose
-
-      # Step 7: Upload the finished installer package back to your computer browser
+          
+      # Step 8: Upload the finished installer package back to your computer browser
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:

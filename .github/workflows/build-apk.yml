@@ -34,7 +34,7 @@ jobs:
       # 5. Run the Flet build engine to generate the APK
       - name: Build Android APK
         run: |
-          flet build apk --yes
+          flet build apk --yes --include assets
 
       # 6. Upload the compiled APK so you can download it
       - name: Upload APK Artifact

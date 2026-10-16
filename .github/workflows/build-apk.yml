@@ -1,62 +1,48 @@
 name: Build Flet Android APK
 
 on:
-  workflow_dispatch: # Allows manual computer execution triggers
+  workflow_dispatch: # Allows you to trigger the build manually from GitHub
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Download your code (main.py, generator.py, ZoidsDB.csv, pyproject.toml)
-      - name: Checkout Repository
+      # 1. Check out your code into the runner env
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Step 2: Allocate extra RAM boundaries to prevent silent Gradle compile crashes
-      - name: Configure Gradle Memory Bounds
-        run: |
-          mkdir -p ~/.gradle
-          echo "org.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m" >> ~/.gradle/gradle.properties
-
-      # Step 3: Install Java JDK 17 (Required by the Android compiler backend)
+      # 2. Set up Java JDK (Required for Android Gradle compilation)
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # Step 4: Install Flutter Version 3.24.0 (Satisfies Flet's explicit requirement)
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.24.0'
-          channel: 'stable'
+      # 3. Setup Android SDK dependencies
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
-      # Step 5: Automatically accept the Android SDK licenses hidden in the toolchain
-      - name: Accept Android Licenses
-        run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses
-
-      # Step 6: Install Python 3.10 for the host runner environment
+      # 4. Install Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
-      # Step 7: Install matching framework dependencies
+      # 5. Install Flet and compiler dependencies
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flet==0.25.2 pandas
+          pip install flet
 
-      # Step 8: Compile the APK package using the newly aligned versions
-      - name: Build Android APK Package
+      # 6. Run the Flet build engine to generate the APK
+      - name: Build Android APK
         run: |
-          flet build apk --verbose
-          
-      # Step 9: Upload the finished installer package back to your computer browser
+          flet build apk
+
+      # 7. Upload the compiled APK so you can download it
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: zoids-encounter-apk
+          name: Zoids-TTRPG-Tools-APK
           path: build/apk/*.apk

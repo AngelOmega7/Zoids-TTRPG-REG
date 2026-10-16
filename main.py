@@ -30,7 +30,7 @@ def main(page: ft.Page):
             encounter_results.controls.append(
                 ft.Text("Please enter a valid integer between 1 and 50.", color=ft.Colors.RED_400)
             )
-            render_view()  # Force layout re-draw
+            render_view()
             return
 
         spawned_mob = generator.generate_encounter(lvl)
@@ -71,7 +71,7 @@ def main(page: ft.Page):
                     )
                 )
                 encounter_results.controls.append(card)
-        render_view()  # Forces parent column node to draw child payload updates
+        render_view()  # Smoothly updates layout tree values
 
     generate_btn = ft.Button(
         "Generate Encounter",
@@ -80,33 +80,42 @@ def main(page: ft.Page):
         bgcolor=ft.Colors.BLUE_700
     )
 
-    # --- DYNAMIC VIEWS ---
+    # --- DYNAMIC VIEWS WITH WORKING COLUMN SCROLLING ---
     def get_encounter_layout():
-        return ft.Column([
-            ft.Text("Random Encounter Generator", size=28, weight=ft.FontWeight.BOLD),
-            create_subtitle(),
-            ft.Divider(height=20, color="transparent"),
-            level_input,
-            generate_btn,
-            ft.Divider(height=20, color="transparent"),  # Fixed: Changed line divider to transparent space
-            encounter_results
-        ], scroll=ft.ScrollMode.ADAPTIVE, alignment=ft.MainAxisAlignment.CENTER,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER)
+        return ft.Container(
+            content=ft.Column([
+                ft.Text("Random Encounter Generator", size=28, weight=ft.FontWeight.BOLD),
+                create_subtitle(),
+                ft.Divider(height=20, color="transparent"),
+                level_input,
+                generate_btn,
+                ft.Divider(height=20, color="transparent"),
+                encounter_results
+            ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                scroll=ft.ScrollMode.ADAPTIVE  # Keep scroll configuration strictly inside the Column
+            ),
+            expand=True
+        )
 
     def get_loot_layout():
-        return ft.Column([
-            ft.Text("Random Loot Generator", size=28, weight=ft.FontWeight.BOLD),
-            create_subtitle(),
-            ft.Divider(height=20, color="transparent"),
-            ft.Text("Loot generation parameters coming soon...", size=16, color=ft.Colors.GREY_400)
-        ], scroll=ft.ScrollMode.ADAPTIVE, alignment=ft.MainAxisAlignment.CENTER,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER)
+        return ft.Container(
+            content=ft.Column([
+                ft.Text("Random Loot Generator", size=28, weight=ft.FontWeight.BOLD),
+                create_subtitle(),
+                ft.Divider(height=20, color="transparent"),
+                ft.Text("Loot generation parameters coming soon...", size=16, color=ft.Colors.GREY_400)
+            ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                scroll=ft.ScrollMode.ADAPTIVE  # Keep scroll configuration strictly inside the Column
+            ),
+            expand=True
+        )
 
     # --- ROUTING APPLICATION DISPATCHER ---
     def render_view():
         page.controls.clear()
 
-        # Pull clean layout structures fresh on index requests
         if nav_bar.selected_index == 0:
             page.add(get_encounter_layout())
         elif nav_bar.selected_index == 1:
@@ -115,7 +124,7 @@ def main(page: ft.Page):
         page.update()
 
     def on_nav_change(e):
-        render_view()  # Hooks state triggers directly into the main thread layout engine
+        render_view()
 
     nav_bar = ft.NavigationBar(
         selected_index=0,
@@ -132,5 +141,6 @@ def main(page: ft.Page):
 
 if __name__ == "__main__":
     ft.run(main)
+
 
 

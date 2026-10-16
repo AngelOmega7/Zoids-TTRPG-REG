@@ -284,5 +284,10 @@ def main(page: ft.Page):
     page.add(main_view_container)  # Single core structural load instance
 
 
+# --- UNIVERSAL PLATFORM DISPATCHER ---
 if __name__ == "__main__":
-    ft.run(main)
+    # Check if the active Flet version supports the new 'run' attribute
+    if hasattr(ft, "run"):
+        ft.run(main)  # Executes on your Flet 1.0+ Windows/Linux builds
+    else:
+        ft.app(target=main)  # Fallback for mobile environments running older Flet runtimes

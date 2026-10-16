@@ -4,10 +4,23 @@ import pandas as pd
 
 
 def _get_csv_path():
-  """Helper to find the database relative to this script."""
-  base_dir = os.path.dirname(os.path.abspath(__file__))
-  return os.path.join(base_dir, "LootDB.csv")
+  """Finds the database file securely across Desktop and Mobile runtimes."""
+  # Check if the code is running inside an Android environment package wrapper
+  if "ANDROID_BOOTLOGO" in os.environ or hasattr(sys, "getandroidapkname"):
+    # Android packages assets inside a specific relative folder directory
+    base_dir = os.path.dirname(os.path.abspath(__file__))
 
+    # Check if serious_python put it in an assets subdirectory
+    test_path = os.path.join(base_dir, "assets", "LootDB.csv")
+    if os.path.exists(test_path):
+      return test_path
+
+    return os.path.join(base_dir, "LootDB.csv")
+
+  else:
+    # Standard fallback path for your local Windows PC and Debian 13 setups
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base_dir, "LootDB.csv")
 
 def get_all_categories():
   """Reads the CSV on startup to find all unique Category types."""
@@ -20,7 +33,6 @@ def get_all_categories():
     return []
   except:
     return []
-
 
 def generate_loot(
     num_items: int,

@@ -35,7 +35,11 @@ def main(page: ft.Page):
         ],
         width=250,
     )
-    available_categories = ["All"] + loot.get_all_categories()
+    try:
+      available_categories = ["All"] + loot.get_all_categories()
+    except Exception:
+      available_categories = ["All"]
+    
     loot_category_dropdown = ft.Dropdown(
         label="Filter by Category",
         value="All",

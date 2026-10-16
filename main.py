@@ -1,16 +1,16 @@
 import flet as ft
 import generator  # Imports your core logic script safely
-
+import loot
 
 def main(page: ft.Page):
     page.title = "Zoids TTRPG Tools"
     page.theme_mode = ft.ThemeMode.DARK
-
+    page.window.icon = "assets/icon.ico"
     # Common Subtitle used on both pages
     def create_subtitle():
         return ft.Text("Zoids TTRPG", size=16, italic=True, color=ft.Colors.BLUE_300)
 
-    # --- SHARED UI DATA HOOKS ---
+    # --- SHARED ENCOUNTER UI DATA HOOKS ---
     encounter_results = ft.Column(spacing=10, horizontal_alignment=ft.CrossAxisAlignment.STRETCH)
     level_input = ft.TextField(
         label="Enter Encounter Level (1-50)",
@@ -20,6 +20,43 @@ def main(page: ft.Page):
         text_align="center"
     )
 
+    # --- SHARED LOOT UI DATA HOOKS ---
+    loot_results = ft.Column(spacing=10, horizontal_alignment=ft.CrossAxisAlignment.STRETCH)
+
+    loot_tier_dropdown = ft.Dropdown(
+        label="Select Loot Tier",
+        value="1",
+        options=[
+            ft.dropdown.Option("1"),
+            ft.dropdown.Option("2"),
+            ft.dropdown.Option("3"),
+            ft.dropdown.Option("4"),
+            ft.dropdown.Option("5"),
+        ],
+        width=250,
+    )
+    available_categories = ["All"] + loot.get_all_categories()
+    loot_category_dropdown = ft.Dropdown(
+        label="Filter by Category",
+        value="All",
+        options=[ft.dropdown.Option(cat) for cat in available_categories],
+        width=250,
+    )
+
+    loot_count_input = ft.TextField(
+        label="Number of Items to Drop",
+        value="1",
+        keyboard_type=ft.KeyboardType.NUMBER,
+        width=250,
+        text_align="center"
+    )
+
+    blox_checkbox = ft.Checkbox(
+        label="Include BLOX Items",
+        value=False
+    )
+
+    # --- CLICK HANDLERS ---
     def on_generate_click(e):
         encounter_results.controls.clear()
         try:
@@ -30,7 +67,7 @@ def main(page: ft.Page):
             encounter_results.controls.append(
                 ft.Text("Please enter a valid integer between 1 and 50.", color=ft.Colors.RED_400)
             )
-            render_view()
+            page.update()  # Deep loop safe refresh
             return
 
         spawned_mob = generator.generate_encounter(lvl)
@@ -71,8 +108,103 @@ def main(page: ft.Page):
                     )
                 )
                 encounter_results.controls.append(card)
-        render_view()  # Smoothly updates layout tree values
+        page.update()  # Direct inline layout tree refresh
 
+    def on_generate_loot_click(e):
+        loot_results.controls.clear()
+        try:
+            count = int(loot_count_input.value)
+            tier = int(loot_tier_dropdown.value)
+            category = str(loot_category_dropdown.value)  # Capture Category layout state
+            if count < 1:
+                raise ValueError
+        except ValueError:
+            loot_results.controls.append(
+                ft.Text("Please enter a valid number of items greater than 0.", color=ft.Colors.RED_400)
+            )
+            page.update()
+            return
+
+        # 🚀 Updated to pass category selection straight down into loot.py
+        dropped_items = loot.generate_loot(
+            num_items=count,
+            target_tier=tier,
+            target_category=category,
+            include_blox=blox_checkbox.value
+        )
+
+        if dropped_items and isinstance(dropped_items, list) and len(dropped_items) == 1 and "Error" in str(
+                dropped_items[0].get('Item', '')):
+            loot_results.controls.append(ft.Text(dropped_items[0]['Item'], color=ft.Colors.RED_400))
+        else:
+            loot_results.controls.append(
+                ft.Text(f"Generated {len(dropped_items)} {category if category != 'All' else ''} Tier {tier} Items:",
+                        size=16, weight=ft.FontWeight.NORMAL)
+            )
+
+            for item in dropped_items:
+                blox_val = item.get('BLOX')
+                is_blox_item = str(blox_val) == "1" or blox_val == 1.0 or blox_val == 1
+
+                type_label = f"{item.get('Category', 'General')}"
+                if is_blox_item:
+                    type_label += " [BLOX]"
+
+                card = ft.Card(
+                    content=ft.Container(
+                        padding=12,
+                        content=ft.Column([
+                            ft.Text(
+                                item.get('Item', 'Unknown Item'),
+                                size=18,
+                                weight=ft.FontWeight.BOLD,
+                                color=ft.Colors.RED_200 if is_blox_item else ft.Colors.BLUE_200
+                            ),
+                            ft.Row([
+                                ft.Text(f"Type: {type_label}", italic=True),
+                                ft.Text(f"Tier {item.get('Tier', tier)}", color=ft.Colors.BLUE_300,
+                                        weight=ft.FontWeight.BOLD),
+                            ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
+                        ], spacing=5)
+                    )
+                )
+                loot_results.controls.append(card)
+        page.update()
+
+    def on_random_category_click(e):
+        import random
+        # 1. Isolate just the actual game categories (skip the "All" filter)
+        game_categories = [cat for cat in loot.get_all_categories() if cat != "All"]
+
+        if not game_categories:
+            page.overlay.append(ft.SnackBar(ft.Text("No categories found in LootDB.csv.")))
+            page.update()
+            return
+
+        # 2. Pick a random category choice
+        random_choice = random.choice(game_categories)
+
+        # 3. Update the dropdown interface value automatically
+        loot_category_dropdown.value = random_choice
+
+        # 4. Display a clean popup notification toast to the user
+        page.overlay.append(
+            ft.SnackBar(
+                content=ft.Text(f"Selected Random Category: {random_choice}", weight=ft.FontWeight.BOLD),
+                bgcolor=ft.Colors.BLUE_900,
+                open=True
+            )
+        )
+        page.update()
+
+    generate_loot_btn = ft.Button(
+        "Roll Tier Loot",
+        on_click=on_generate_loot_click,
+        color=ft.Colors.WHITE,
+        bgcolor=ft.Colors.BLUE_700
+    )
+
+    # --- BUTTON DECLARATIONS ---
     generate_btn = ft.Button(
         "Generate Encounter",
         on_click=on_generate_click,
@@ -80,55 +212,68 @@ def main(page: ft.Page):
         bgcolor=ft.Colors.BLUE_700
     )
 
-    # --- DYNAMIC VIEWS WITH WORKING COLUMN SCROLLING ---
-    def get_encounter_layout():
-        return ft.Container(
-            content=ft.Column([
-                ft.Text("Random Encounter Generator", size=28, weight=ft.FontWeight.BOLD),
-                create_subtitle(),
-                ft.Divider(height=20, color="transparent"),
-                level_input,
-                generate_btn,
-                ft.Divider(height=20, color="transparent"),
-                encounter_results
-            ],
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                scroll=ft.ScrollMode.ADAPTIVE  # Keep scroll configuration strictly inside the Column
-            ),
-            expand=True
-        )
+    generate_loot_btn = ft.Button(
+        "Roll Tier Loot",
+        on_click=on_generate_loot_click,
+        color=ft.Colors.WHITE,
+        bgcolor=ft.Colors.BLUE_700
+    )
 
-    def get_loot_layout():
-        return ft.Container(
-            content=ft.Column([
-                ft.Text("Random Loot Generator", size=28, weight=ft.FontWeight.BOLD),
-                create_subtitle(),
-                ft.Divider(height=20, color="transparent"),
-                ft.Text("Loot generation parameters coming soon...", size=16, color=ft.Colors.GREY_400)
-            ],
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                scroll=ft.ScrollMode.ADAPTIVE  # Keep scroll configuration strictly inside the Column
-            ),
-            expand=True
-        )
+    random_category_btn = ft.Button(
+        "Random Category",
+        on_click=on_random_category_click,
+        color=ft.Colors.WHITE,
+        bgcolor=ft.Colors.GREY_800
+    )
 
-    # --- ROUTING APPLICATION DISPATCHER ---
-    def render_view():
-        page.controls.clear()
+    # --- PERSISTENT VIEW LAYOUTS ---
+    encounter_layout = ft.Column([
+        ft.Text("Random Encounter Generator", size=28, weight=ft.FontWeight.BOLD),
+        create_subtitle(),
+        ft.Divider(height=20, color="transparent"),
+        level_input,
+        generate_btn,
+        ft.Divider(height=20, color="transparent"),
+        encounter_results
+    ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, scroll=ft.ScrollMode.ADAPTIVE)
 
+    loot_layout = ft.Column([
+        ft.Text("Random Loot Generator", size=28, weight=ft.FontWeight.BOLD),
+        create_subtitle(),
+        ft.Divider(height=20, color="transparent"),
+        loot_tier_dropdown,
+        ft.Divider(height=10, color="transparent"),
+
+        # 🚀 NEW: Aligned row grouping your dropdown and new random trigger button together
+        ft.Row([
+            loot_category_dropdown,
+            random_category_btn
+        ], alignment=ft.MainAxisAlignment.CENTER, spacing=10),
+
+        ft.Divider(height=10, color="transparent"),
+        loot_count_input,
+        ft.Divider(height=10, color="transparent"),
+        blox_checkbox,
+        ft.Divider(height=10, color="transparent"),
+        generate_loot_btn,
+        ft.Divider(height=20, color="transparent"),
+        loot_results
+    ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, scroll=ft.ScrollMode.ADAPTIVE)
+
+    # --- FIXED MAIN CONTAINER ARCHITECTURE ---
+    # We load a persistent parent container area instead of clear/adding nodes continuously
+    main_view_container = ft.Container(content=encounter_layout, expand=True)
+
+    def switch_tab(e):
         if nav_bar.selected_index == 0:
-            page.add(get_encounter_layout())
+            main_view_container.content = encounter_layout
         elif nav_bar.selected_index == 1:
-            page.add(get_loot_layout())
-
-        page.update()
-
-    def on_nav_change(e):
-        render_view()
+            main_view_container.content = loot_layout
+        page.update()  # Safe view-swap content toggle trigger
 
     nav_bar = ft.NavigationBar(
         selected_index=0,
-        on_change=on_nav_change,
+        on_change=switch_tab,
         destinations=[
             ft.NavigationBarDestination(icon=ft.Icons.SHIELD, label="Encounters"),
             ft.NavigationBarDestination(icon=ft.Icons.CASINO, label="Loot"),
@@ -136,11 +281,8 @@ def main(page: ft.Page):
     )
 
     page.navigation_bar = nav_bar
-    render_view()
+    page.add(main_view_container)  # Single core structural load instance
 
 
 if __name__ == "__main__":
     ft.run(main)
-
-
-

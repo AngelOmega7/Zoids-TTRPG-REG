@@ -34,12 +34,14 @@ jobs:
           flet --version
           python -m pip show flet pandas
           ls -la
+      - name: Verify Flet CLI
+        run: |
+          flet --version
+          flet build --help
 
       - name: Build Android APK
         run: |
-          flet build apk --yes \
-            --include assets ZoidsDB.csv LootDB.csv \
-            --verbose
+          flet build apk --yes --verbose
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4

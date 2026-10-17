@@ -1,10 +1,8 @@
 import random
 import pandas as pd
-import os
+from data_paths import ZOIDS_CSV, validate_csv
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-CSV_PATH = os.path.join(SCRIPT_DIR, "ZoidsDB.csv")
-df = pd.read_csv(CSV_PATH)
+df = pd.read_csv(validate_csv(ZOIDS_CSV))
 
 def generate_encounter(encounter_level):
     encounter_level_mod = encounter_level + 2

@@ -4,9 +4,7 @@ import random
 import pandas as pd
 from data_paths import LOOT_CSV, validate_csv
 
-def _get_csv_path():
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(base_dir, "LootDB.csv")
+df = pd.read_csv(validate_csv(LOOT_CSV))
 
 def get_all_categories():
     try:

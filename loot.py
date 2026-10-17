@@ -1,38 +1,18 @@
-import os
 import random
 import pandas as pd
+from data_paths import LOOT_CSV, validate_csv
 
-
-def _get_csv_path():
-  """Finds the database file securely across Desktop and Mobile runtimes."""
-  # Check if the code is running inside an Android environment package wrapper
-  if "ANDROID_BOOTLOGO" in os.environ or hasattr(sys, "getandroidapkname"):
-    # Android packages assets inside a specific relative folder directory
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-
-    # Check if serious_python put it in an assets subdirectory
-    test_path = os.path.join(base_dir, "assets", "LootDB.csv")
-    if os.path.exists(test_path):
-      return test_path
-
-    return os.path.join(base_dir, "LootDB.csv")
-
-  else:
-    # Standard fallback path for your local Windows PC and Debian 13 setups
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(base_dir, "LootDB.csv")
 
 def get_all_categories():
-  """Reads the CSV on startup to find all unique Category types."""
-  try:
-    df = pd.read_csv(_get_csv_path())
-    if "Category" in df.columns:
-      # Clear blanks/NaNs, get unique items, sort alphabetically
-      cats = df["Category"].dropna().unique().tolist()
-      return sorted([str(c) for c in cats])
-    return []
-  except:
-    return []
+    try:
+        df = pd.read_csv(validate_csv(LOOT_CSV))
+        if "Category" in df.columns:
+            categories = df["Category"].dropna().unique()
+            return sorted(str(c) for c in categories)
+        return []
+    except (OSError, ValueError, pd.errors.ParserError) as exc:
+        print(f"Could not load loot categories: {exc}")
+        return []
 
 def generate_loot(
     num_items: int,

@@ -6,6 +6,10 @@ import loot
 def main(page: ft.Page):
     page.title = "Zoids TTRPG Tools"
     page.theme_mode = ft.ThemeMode.DARK
+    # Responsive sizing is applied from page.on_resize below. Desktop keeps the
+    # original dimensions; narrow screens use compact controls and stacked actions.
+    is_mobile_layout = False
+    control_width = 250
     if sys.platform == "win32":
         page.window.icon = "assets/icon.ico"
     # Common Subtitle used on both pages
@@ -109,7 +113,7 @@ def main(page: ft.Page):
                                 ft.Text(f"Armor: {zoid['AR']}", color=ft.Colors.ORANGE_400),
                                 ft.Text(f"Def: {zoid['DF']}", color=ft.Colors.PURPLE_300),
                             ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                                vertical_alignment=ft.CrossAxisAlignment.CENTER)
+                                vertical_alignment=ft.CrossAxisAlignment.CENTER, wrap=True)
                         ], spacing=5)
                     )
                 )
@@ -226,8 +230,16 @@ def main(page: ft.Page):
     )
 
     # --- PERSISTENT VIEW LAYOUTS ---
+    encounter_heading = ft.Text("Random Encounter Generator", size=28, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER)
+    loot_heading = ft.Text("Random Loot Generator", size=28, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER)
+
+    category_controls = ft.Container(
+        content=ft.Row([loot_category_dropdown, random_category_btn], alignment=ft.MainAxisAlignment.CENTER, spacing=10),
+        alignment=ft.alignment.center,
+    )
+
     encounter_layout = ft.Column([
-        ft.Text("Random Encounter Generator", size=28, weight=ft.FontWeight.BOLD),
+        encounter_heading,
         create_subtitle(),
         ft.Divider(height=20, color="transparent"),
         level_input,
@@ -237,17 +249,14 @@ def main(page: ft.Page):
     ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, scroll=ft.ScrollMode.ADAPTIVE)
 
     loot_layout = ft.Column([
-        ft.Text("Random Loot Generator", size=28, weight=ft.FontWeight.BOLD),
+        loot_heading,
         create_subtitle(),
         ft.Divider(height=20, color="transparent"),
         loot_tier_dropdown,
         ft.Divider(height=10, color="transparent"),
 
-        # 🚀 NEW: Aligned row grouping your dropdown and new random trigger button together
-        ft.Row([
-            loot_category_dropdown,
-            random_category_btn
-        ], alignment=ft.MainAxisAlignment.CENTER, spacing=10),
+        # The resize handler switches this between a row (desktop) and column (phone).
+        category_controls,
 
         ft.Divider(height=10, color="transparent"),
         loot_count_input,
@@ -281,6 +290,48 @@ def main(page: ft.Page):
 
     page.navigation_bar = nav_bar
     page.add(main_view_container)  # Single core structural load instance
+
+    def apply_responsive_layout(e=None):
+        """Compact the UI on narrow screens without changing desktop sizing."""
+        nonlocal is_mobile_layout, control_width
+        screen_width = page.width or 800
+        mobile = screen_width < 600
+        is_mobile_layout = mobile
+        control_width = max(180, min(250, int(screen_width - 40))) if mobile else 250
+
+        # Inputs remain at their original 250px width on desktop.
+        level_input.width = control_width
+        loot_tier_dropdown.width = control_width
+        loot_category_dropdown.width = control_width
+        loot_count_input.width = control_width
+
+        # Headings and spacing become more compact only on phones.
+        heading_size = 21 if mobile else 28
+        encounter_heading.size = heading_size
+        loot_heading.size = heading_size
+        encounter_layout.spacing = 6 if mobile else 10
+        loot_layout.spacing = 6 if mobile else 10
+
+        if mobile:
+            category_controls.width = control_width
+            category_controls.content = ft.Column(
+                [loot_category_dropdown, ft.Container(content=random_category_btn, width=control_width)],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=4,
+            )
+        else:
+            category_controls.width = None
+            category_controls.content = ft.Row(
+                [loot_category_dropdown, random_category_btn],
+                alignment=ft.MainAxisAlignment.CENTER,
+                spacing=10,
+            )
+
+        page.update()
+
+    page.on_resize = apply_responsive_layout
+    # Apply once after the initial layout; on_resize handles later rotation/resizing.
+    apply_responsive_layout()
 
 
 # --- UNIVERSAL PLATFORM DISPATCHER ---

@@ -306,7 +306,7 @@ def main(page: ft.Page):
 
         # Keep page headings clear of the Android status bar on phones.
         # Desktop layout remains unchanged.
-        main_view_container.padding = ft.padding.only(top=24 if mobile else 0)
+        main_view_container.padding = ft.Padding(0, 24 if mobile else 0, 0, 0)
 
         # Inputs remain at their original 250px width on desktop.
         level_input.width = control_width

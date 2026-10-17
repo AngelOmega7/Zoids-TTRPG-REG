@@ -1,27 +1,6 @@
 import flet as ft
 import generator  # Imports your core logic script safely
 import loot
-import os
-from pathlib import Path
-
-def get_bundle_file_path(filename: str) -> str:
-    """
-    Returns the true runtime file location for asset dependencies.
-    Resolves inside Flet's Android asset container or falls back to desktop directories.
-    """
-    # Check if Flet compiled environment environment variable is present
-    production_assets_dir = os.environ.get("FLET_ASSETS_DIR")
-    
-    if production_assets_dir:
-        # Production build layout (Android APK)
-        return os.path.join(production_assets_dir, filename)
-    else:
-        # Local development fallback path (Windows Desktop execution environment)
-        default_local_dir = Path(__file__).parent / "assets"
-        if default_local_dir.exists():
-            return os.path.join(default_local_dir, filename)
-        # Root fallback directory handling
-        return os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
 
 def main(page: ft.Page):
     page.title = "Zoids TTRPG Tools"

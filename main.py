@@ -233,9 +233,14 @@ def main(page: ft.Page):
     encounter_heading = ft.Text("Random Encounter Generator", size=28, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER)
     loot_heading = ft.Text("Random Loot Generator", size=28, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER)
 
+    # The child layouts handle their own alignment. Avoid ft.alignment.center,
+    # which is not available in some current Flet versions.
     category_controls = ft.Container(
-        content=ft.Row([loot_category_dropdown, random_category_btn], alignment=ft.MainAxisAlignment.CENTER, spacing=10),
-        alignment=ft.alignment.center,
+        content=ft.Row(
+            [loot_category_dropdown, random_category_btn],
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=10,
+        ),
     )
 
     encounter_layout = ft.Column([

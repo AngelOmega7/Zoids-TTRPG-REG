@@ -203,13 +203,6 @@ def main(page: ft.Page):
         )
         page.update()
 
-    generate_loot_btn = ft.Button(
-        "Roll Tier Loot",
-        on_click=on_generate_loot_click,
-        color=ft.Colors.WHITE,
-        bgcolor=ft.Colors.BLUE_700
-    )
-
     # --- BUTTON DECLARATIONS ---
     generate_btn = ft.Button(
         "Generate Encounter",

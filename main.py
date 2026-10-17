@@ -304,6 +304,10 @@ def main(page: ft.Page):
         is_mobile_layout = mobile
         control_width = max(180, min(250, int(screen_width - 40))) if mobile else 250
 
+        # Keep page headings clear of the Android status bar on phones.
+        # Desktop layout remains unchanged.
+        main_view_container.padding = ft.padding.only(top=24 if mobile else 0)
+
         # Inputs remain at their original 250px width on desktop.
         level_input.width = control_width
         loot_tier_dropdown.width = control_width

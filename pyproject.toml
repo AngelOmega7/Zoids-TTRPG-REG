@@ -1,15 +1,13 @@
+
 [project]
 name = "zoids_ttrpg_reg"
 version = "0.1.0"
 description = "Zoids TTRPG Random Encounter Generator"
+requires-python = ">=3.13,<3.14"
 dependencies = [
-    "flet==0.25.2",
+    "flet==0.86.0",
     "pandas>=2.0.0",
 ]
 
 [tool.flet]
 main-module = "main"
-
-# This forces the internal apk engine container to compile using an embedded Python 3.10 runtime
-[tool.flet.android]
-python-version = "3.10"

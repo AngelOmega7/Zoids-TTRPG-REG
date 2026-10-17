@@ -24,7 +24,7 @@ def generate_loot(
     include_blox: bool = False,
 ):
   try:
-    df = pd.read_csv(_get_csv_path())
+    df = pd.read_csv(validate_csv(LOOT_CSV))
 
     # 1. Filter down strictly to the selected Tier
     tier_df = df[df["Tier"] == target_tier]

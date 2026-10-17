@@ -1,11 +1,13 @@
 import flet as ft
+import sys
 import generator  # Imports your core logic script safely
 import loot
 
 def main(page: ft.Page):
     page.title = "Zoids TTRPG Tools"
     page.theme_mode = ft.ThemeMode.DARK
-    page.window.icon = "assets/icon.ico"
+    if sys.platform == "win32":
+        page.window.icon = "assets/icon.ico"
     # Common Subtitle used on both pages
     def create_subtitle():
         return ft.Text("Zoids TTRPG", size=16, italic=True, color=ft.Colors.BLUE_300)
